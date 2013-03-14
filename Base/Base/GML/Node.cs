@@ -182,7 +182,7 @@ namespace Base.GML
         #endregion
     };
 
-    class Node : ICloneable
+    class Node : IEnumerable, ICloneable
     {
         // type
         public enum Type
@@ -371,6 +371,10 @@ namespace Base.GML
             clone.children = this.children.Clone() as Container;
             return clone;
         }
+        public IEnumerator GetEnumerator()
+        {
+            return Children.GetEnumerator();
+        }
         #endregion
 
         #region Utility Functions
@@ -428,56 +432,86 @@ namespace Base.GML
             return new Node("", "/");
         }
         
-        public Node Search(string key)
+        public Node Find(string pattern, bool ispattern = false)
         {
-            if (Key == key)
+            if (Match(pattern, ispattern))
                 return this;
             Node found = null;
             foreach (Node attri in Attributes)
             {
-                found = attri.Search(key);
+                found = attri.Find(pattern, ispattern);
                 if (found != null)
                     return found;
             }
-            foreach (Node attri in Children)
+            foreach (Node child in Children)
             {
-                found = attri.Search(key);
+                found = child.Find(pattern, ispattern);
                 if (found != null)
                     return found;
             }
             return found;
         }
-        public Node[] SearchAll(string key)
+        public Node[] FindAll(string pattern, bool ispattern = false)
         {
             List<Node> ret = new List<Node>();
-            SearchAll(key, ret);
+            FindAll(pattern, ret, ispattern);
             return ret.ToArray();
         }
-        private void SearchAll(string key, List<Node> ret_list)
+        private void FindAll(string pattern, List<Node> ret_list, bool ispattern = false)
         {
-            if (Key == key)
+            if (Match(pattern, ispattern))
                 ret_list.Add(this);
             foreach (Node attri in Attributes)
-                attri.SearchAll(key, ret_list);
+                attri.FindAll(key, ret_list, ispattern);
             foreach (Node child in Children)
-                child.SearchAll(key, ret_list);
+                child.FindAll(key, ret_list, ispattern);
         }
-        public bool DetailMatch(string keyPattern, string attriPattern = "", string childPattern = "", string valuePattern = "")
+        public bool Match(string pattern, bool ispattern)
         {
-            Regex match = new Regex(keyPattern);
-            if (keyPattern != "" && match.Match(key).Length == 0)
+            // if not pattern match, just compare key
+            if (ispattern == false)
+                return Key == pattern;
+
+            List<string> split = pattern.Split('/').ToList();
+            while (split.Count < 3)
+                split.Add("");
+
+            return Match(split[0], split[1], split[2]);
+        }
+        private bool MatchKeyValuePair(string keyValue)
+        {
+            Regex match = null;
+
+            int offset = keyValue.IndexOf('=');
+            if (offset < 0)
+            {
+                match = new Regex(keyValue);
+                return match.IsMatch(Key);
+            }
+            string keyPattern = keyValue.Substring(0, offset);
+            string valuePattern = keyValue.Substring(offset + 1);
+            valuePattern = valuePattern.Trim(new char[]{'\'','"'});
+
+            match = new Regex(keyPattern);
+            if (!match.IsMatch(Key))
                 return false;
             match = new Regex(valuePattern);
-            if (valuePattern != "" && match.Match(value).Length == 0)
+            if (!match.IsMatch(Value))
                 return false;
+
+            return true;
+        }
+        private bool Match(string keyValue, string attriPattern = "", string childPattern = "")
+        {
+            if (keyValue != "")
+                if (!MatchKeyValuePair(keyValue))
+                    return false;
 
             if (attriPattern != "")
             {
-                match = new Regex(attriPattern);
-
                 bool flag = false;
                 foreach (Node node in Attributes)
-                    if (match.Match(node.Key).Length > 0)
+                    if (node.MatchKeyValuePair(attriPattern))
                     {
                         flag = true;
                         break;
@@ -486,13 +520,11 @@ namespace Base.GML
                     return false;
             }
 
-            if (valuePattern != "")
+            if (childPattern != "")
             {
-                match = new Regex(valuePattern);
-
                 bool flag = false;
                 foreach (Node node in Children)
-                    if (match.Match(node.Key).Length > 0)
+                    if (node.MatchKeyValuePair(childPattern))
                     {
                         flag = true;
                         break;
@@ -503,32 +535,8 @@ namespace Base.GML
 
             return true;
         }
-        public Node[] SearchDetail(string detailPattern)
-        {
-            List<string> split = detailPattern.Split('/').ToList();
-            while (split.Count < 4)
-                split.Add("");
 
-            return SearchDetail(split[0], split[1], split[2], split[3]);
-        }
-        public Node[] SearchDetail(string keyPattern, string attriPattern = "", string childPattern = "", string valuePattern = "")
-        {
-            List<Node> ret_list = new List<Node>();
-            SearchDetail(keyPattern, attriPattern, childPattern, valuePattern, ret_list);
-            return ret_list.ToArray();
-        }
-        private void SearchDetail(string keyPattern, string attriPattern, string childPattern, string valuePattern, List<Node> ret_list)
-        {
-            if (DetailMatch(keyPattern, attriPattern, childPattern, valuePattern))
-                ret_list.Add(this);
-
-            foreach (Node node in Attributes)
-                node.SearchDetail(keyPattern, attriPattern, childPattern, valuePattern, ret_list);
-            foreach (Node node in Children)
-                node.SearchDetail(keyPattern, attriPattern, childPattern, valuePattern, ret_list);
-        }
-
-        public Node Find(string reference)
+        public Node FindPath(string reference)
         {
             List<string> path = Common.ParseReference(reference);
 
@@ -562,7 +570,7 @@ namespace Base.GML
 
             // then found global
             int dist = -1;
-            foreach (Node trial in Root.SearchAll(path.Last()))
+            foreach (Node trial in Root.FindAll(path.Last()))
             {
                 int rdist = Distance(trial, this);
                 if (rdist >= 0 && (dist < 0 || rdist < dist))

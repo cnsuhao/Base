@@ -23,7 +23,7 @@ namespace Base
 
         static void Main(string[] args)
         {
-            string content = ReadFile("test.txt");
+            string content = ReadFile("input.gml");
             string json = ReadFile("json.txt");
             string xml = ReadFile("xml.txt");
 
@@ -34,7 +34,12 @@ namespace Base
                 GML.Node root = GML.Parser.Deserialize(content);
                 TimeSpan delta = DateTime.Now - now;
                 Console.WriteLine(delta.ToString());
-                Console.WriteLine(root.ToString());
+                //Console.WriteLine(root.ToString());
+
+                foreach (GML.Node sub in root["battle"]["events"].Find("contai/name='start_phase'", true))
+                {
+                    Console.WriteLine(sub.ToString());
+                }
 
                 FileStream file = new FileStream("output.txt", FileMode.Create);
                 StreamWriter writer = new StreamWriter(file);

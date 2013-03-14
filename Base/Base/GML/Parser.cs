@@ -130,14 +130,14 @@ namespace Base.GML
             {
                 if (node.BaseRef == "$")
                 {
-                    Node refer = node.Find(node.Value);
+                    Node refer = node.FindPath(node.Value);
                     if (refer == null)
                         AddWarning(new ParserException("You can not reference a reference node!").ToString());
                     else
                         node.ReferenceBy(refer);
                 }
                 else if (node.BaseRef != "") {
-                    Node refer = node.Find(node.BaseRef);
+                    Node refer = node.FindPath(node.BaseRef);
                     if (node.IsAncestor(refer))
                         throw new ParserException("You can not make an base circle!");
                     node.Base = refer;

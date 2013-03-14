@@ -96,7 +96,8 @@ namespace Base.GML
 
         public string Generate()
         {
-            WriteHeader();
+            if (root.IsRoot)
+                WriteHeader();
             if (root.Key == "/")
             {
                 bool firstItem = true;
