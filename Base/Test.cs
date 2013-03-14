@@ -36,7 +36,7 @@ namespace Base
                 Console.WriteLine(delta.ToString());
                 //Console.WriteLine(root.ToString());
 
-                foreach (GML.Node sub in root["battle"]["events"].Find("contai/name='start_phase'", true)["event"])
+                foreach (GML.Node sub in root["battle"]["events"].Find("container@name='start_phase'")["event"].FindAll("action_dialog@side='delay'"))
                 {
                     Console.WriteLine(sub.ToString());
                 }

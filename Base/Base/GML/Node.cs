@@ -455,86 +455,135 @@ namespace Base.GML
         
         // Find nodes in the sub tree
         // If you use pattern, the syntax is here:
-        // Key(=value)/attribute1=value1,attribute2=value2.../child1=value1,child2=value2...
+        // Key(=value)@attribute1=value1,attribute2=value2...:child1=value1,child2=value2...
         // All the string can be regular expression
-        public Node Find(string pattern, bool ispattern = false)
+        class FindBundle
         {
-            if (Match(pattern, ispattern))
+            public string keyValue = "";
+            public List<string> attributes = null;
+            public List<string> children = null;
+        }
+        public Node Find(string pattern, bool ispattern = true)
+        {
+            return Find(pattern, MakeFindBundle(pattern, ispattern));
+        }
+        public Node[] FindAll(string pattern, bool ispattern = true)
+        {
+            return FindAll(pattern, MakeFindBundle(pattern, ispattern));
+        }
+        public bool Match(string pattern, bool ispattern = true)
+        {
+            return Match(pattern, MakeFindBundle(pattern, ispattern));
+        }
+        private Node Find(string pattern, FindBundle bundle)
+        {
+            if (Match(pattern, bundle))
                 return this;
             Node found = null;
             foreach (Node attri in Attributes)
             {
-                found = attri.Find(pattern, ispattern);
+                found = attri.Find(pattern, bundle);
                 if (found != null)
                     return found;
             }
             foreach (Node child in Children)
             {
-                found = child.Find(pattern, ispattern);
+                found = child.Find(pattern, bundle);
                 if (found != null)
                     return found;
             }
             return found;
         }
-        public Node[] FindAll(string pattern, bool ispattern = false)
+        private Node[] FindAll(string pattern, FindBundle bundle)
         {
             List<Node> ret = new List<Node>();
-            FindAll(pattern, ret, ispattern);
+            FindAll(pattern, ret, bundle);
             return ret.ToArray();
         }
-        private void FindAll(string pattern, List<Node> ret_list, bool ispattern = false)
+        private void FindAll(string pattern, List<Node> ret_list, FindBundle bundle)
         {
-            if (Match(pattern, ispattern))
+            if (Match(pattern, bundle))
                 ret_list.Add(this);
             foreach (Node attri in Attributes)
-                attri.FindAll(key, ret_list, ispattern);
+                attri.FindAll(pattern, ret_list, bundle);
             foreach (Node child in Children)
-                child.FindAll(key, ret_list, ispattern);
+                child.FindAll(pattern, ret_list, bundle);
         }
-        public bool Match(string pattern, bool ispattern)
+        private FindBundle MakeFindBundle(string pattern, bool ispattern = true)
+        {
+            if (ispattern == false)
+                return null;
+
+            pattern += '^';
+
+            string keyValue = "";
+            List<string> attributes = new List<string>(), children = new List<string>();
+            string tempStr = "";
+            int patternType = 0;
+
+            foreach (char c in pattern)
+            {
+                if (c == '@' || c == ':' || c == ',' || c == ' ' || c == '^')
+                {
+                    if (tempStr != "")
+                    {
+                        if (patternType == 0)
+                            keyValue = tempStr;
+                        else if (patternType == 1)
+                            attributes.Add(tempStr);
+                        else
+                            children.Add(tempStr);
+                    }
+                    tempStr = "";
+                    if (c == '@')
+                        patternType = 1;
+                    else if (c == ':')
+                        patternType = 2;
+                }
+                else
+                    tempStr += c;
+            }
+
+            FindBundle bundle = new FindBundle();
+            bundle.keyValue = keyValue;
+            bundle.attributes = attributes;
+            bundle.children = children;
+
+            return bundle;
+        }
+        private bool Match(string pattern, FindBundle bundle = null)
         {
             // if not pattern match, just compare key
-            if (ispattern == false)
+            if (bundle == null)
                 return Key == pattern;
 
-            List<string> split = pattern.Split('/').ToList();
-            while (split.Count < 3)
-                split.Add("");
-
-            return Match(split[0], split[1], split[2]);
+            return Match(bundle);
         }
         private bool MatchKeyValuePair(string keyValue)
         {
-            Regex match = null;
-
             int offset = keyValue.IndexOf('=');
             if (offset < 0)
-            {
-                match = new Regex(keyValue);
-                return match.IsMatch(Key);
-            }
+                return Regex.IsMatch(Key, "^"+keyValue+"$", RegexOptions.IgnoreCase);
             string keyPattern = keyValue.Substring(0, offset);
             string valuePattern = keyValue.Substring(offset + 1);
             valuePattern = valuePattern.Trim(new char[]{'\'','"'});
 
-            match = new Regex(keyPattern);
-            if (!match.IsMatch(Key))
+            if (!Regex.IsMatch(Key, "^"+keyPattern+"$", RegexOptions.IgnoreCase))
                 return false;
-            match = new Regex(valuePattern);
-            if (!match.IsMatch(Value))
+            if (!Regex.IsMatch(Value, "^"+valuePattern+"$"))
                 return false;
 
             return true;
         }
-        private bool Match(string keyValue, string attriPattern = "", string childPattern = "")
+        private bool Match(FindBundle bundle)
         {
-            if (keyValue != "")
-                if (!MatchKeyValuePair(keyValue))
+            if (bundle.keyValue != "")
+                if (!MatchKeyValuePair(bundle.keyValue))
                     return false;
 
-            if (attriPattern != "")
+            if (bundle.attributes.Count > 0)
             {
-                List<string> matches = attriPattern.Split(',').ToList();
+                List<string> matches = bundle.attributes.ToList();
                 foreach (Node node in Attributes)
                     foreach (string match in matches)
                         if (node.MatchKeyValuePair(match))
@@ -546,9 +595,9 @@ namespace Base.GML
                     return false;
             }
 
-            if (childPattern != "")
+            if (bundle.children.Count > 0)
             {
-                List<string> matches = childPattern.Split(',').ToList();
+                List<string> matches = bundle.children.ToList();
                 foreach (Node node in Children)
                     foreach (string match in matches)
                         if (node.MatchKeyValuePair(match))
