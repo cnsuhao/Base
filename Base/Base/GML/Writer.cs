@@ -86,6 +86,7 @@ namespace Base.GML
         Node root = null;
         int indentation = 0;
 
+        // Write a node in specific style
         public Writer(Node node, Style style = null)
         {
             this.root = node;
@@ -94,6 +95,7 @@ namespace Base.GML
                 this.style = Style.StandardStyle;
         }
 
+        // Generate the output string
         public string Generate()
         {
             if (root.IsRoot)
@@ -281,6 +283,7 @@ namespace Base.GML
         }
         #endregion
 
+        // Utility static function
         public static string Serialize(Node node, Style style = null)
         {
             var instance = new Writer(node, style);

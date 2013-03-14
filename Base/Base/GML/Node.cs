@@ -18,6 +18,11 @@ using System.Text.RegularExpressions;
 
 namespace Base.GML
 {
+    /*
+     * A container to contain a bunch of nodes
+     * It holds a list to store all the nodes in order
+     * And it also holds a dictionary to store all the named nodes for request by name
+     */
     class Container : IEnumerable, ICloneable
     {
         private Container baseContainer = null;
@@ -29,6 +34,7 @@ namespace Base.GML
         public Container Whole { get { return this + baseContainer.Whole; } }
         public bool HasBase { get { return baseContainer != null; }}
         public Container Base { get { return baseContainer; } set { baseContainer = value; } }
+
         public Node this[string key]
         {
             get {
@@ -45,7 +51,6 @@ namespace Base.GML
                 Add(value);
             }
         }
-
         public Node this[int index]
         {
             get {
@@ -78,6 +83,7 @@ namespace Base.GML
             map.Clear();
         }
 
+        // remove by key, it will remove all the key with the same name
         public Container Remove(string key)
         {
             if (!map.ContainsKey(key))
@@ -99,6 +105,7 @@ namespace Base.GML
             nodes.Remove(node);
             return this;
         }
+        // if there exists a node with same key, it will replace it in map, but they will both store in list
         public Container Add(Node node)
         {
             nodes.Add(node);
@@ -130,6 +137,7 @@ namespace Base.GML
             return ret;
         }
 
+        // Enumerator, first self, then baseContainer
         public IEnumerator GetEnumerator()
         {
             return new ContainerEnumerator(this);
@@ -184,7 +192,7 @@ namespace Base.GML
 
     class Node : IEnumerable, ICloneable
     {
-        // type
+        // type, you can check this for knowning the type of node's value
         public enum Type
         {
             None = 0,
@@ -302,7 +310,6 @@ namespace Base.GML
         public static implicit operator string(Node node) { return node.Value; }
         #endregion
 
-
         #region Contructor
         public Node() { }
         public Node(string v, string key = "", string baseRef = "") { Assign(v, key, baseRef); }
@@ -323,15 +330,24 @@ namespace Base.GML
         public Node AddAttribute(Node node)
         {
             node.parent = this;
-            attributes.Add(node);
+            if (!node.IsRoot)
+                attributes.Add(node);
+            else
+                foreach (Node child in node)
+                    attributes.Add(child);
             return this;
         }
         public Node AddChild(Node node)
         {
             node.parent = this;
-            children.Add(node);
+            if (!node.IsRoot)
+                children.Add(node);
+            else
+                foreach (Node child in node)
+                    children.Add(child);
             return this;
         }
+        // Reference by another node, it will copy all the values & attris & children from it
         public Node ReferenceBy(Node other)
         {
             value = other.Value;
@@ -350,10 +366,12 @@ namespace Base.GML
             }
             return false;
         }
+        // override ToString function, it will use Serialize with standard style
         public override string ToString()
         {
             return Writer.Serialize(this);
         }
+        // you can choose custom style to serialize the node
         public string ToString(Writer.Style style)
         {
             return Writer.Serialize(this, style);
@@ -378,7 +396,7 @@ namespace Base.GML
         #endregion
 
         #region Utility Functions
-        //Static
+        // Validate the type of this node
         public static Type ValidateType(Node node)
         {
             Type type = Type.None;
@@ -398,12 +416,14 @@ namespace Base.GML
                 type |= Type.Attribute;
             return type;
         }
+        // Create a node with random value
         public static Node Create<T>(T v, string key = "", string baseRef = "")
         {
             Node node = new Node();
             node.Assign(v, key, baseRef);
             return node;
         }
+        // Calculate the distance between a & b in the tree, you must gurrantee they have the same root
         public static int Distance(Node a, Node b)
         {
             int count = 0, index = 0;
@@ -427,11 +447,16 @@ namespace Base.GML
 
             return count;
         }
+        // Create a empty root
         public static Node CreateRoot()
         {
             return new Node("", "/");
         }
         
+        // Find nodes in the sub tree
+        // If you use pattern, the syntax is here:
+        // Key(=value)/attribute1=value1,attribute2=value2.../child1=value1,child2=value2...
+        // All the string can be regular expression
         public Node Find(string pattern, bool ispattern = false)
         {
             if (Match(pattern, ispattern))
@@ -509,33 +534,35 @@ namespace Base.GML
 
             if (attriPattern != "")
             {
-                bool flag = false;
+                List<string> matches = attriPattern.Split(',').ToList();
                 foreach (Node node in Attributes)
-                    if (node.MatchKeyValuePair(attriPattern))
-                    {
-                        flag = true;
-                        break;
-                    }
-                if (flag == false)
+                    foreach (string match in matches)
+                        if (node.MatchKeyValuePair(match))
+                        {
+                            matches.Remove(match);
+                            break;
+                        }
+                if (matches.Count > 0)
                     return false;
             }
 
             if (childPattern != "")
             {
-                bool flag = false;
+                List<string> matches = childPattern.Split(',').ToList();
                 foreach (Node node in Children)
-                    if (node.MatchKeyValuePair(childPattern))
-                    {
-                        flag = true;
-                        break;
-                    }
-                if (flag == false)
+                    foreach (string match in matches)
+                        if (node.MatchKeyValuePair(match))
+                        {
+                            matches.Remove(match);
+                            break;
+                        }
+                if (matches.Count > 0)
                     return false;
             }
 
             return true;
         }
-
+        // Find a node with reference path
         public Node FindPath(string reference)
         {
             List<string> path = Common.ParseReference(reference);

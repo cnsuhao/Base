@@ -92,6 +92,7 @@ namespace Base.GML
         }
 
         #region Public Interfaces
+        // Utility static function to deserialise a gml script
         public static Node Deserialize(string content) {
             return Parse(content); 
         }

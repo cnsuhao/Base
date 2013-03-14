@@ -19,6 +19,7 @@ namespace Base.GML
     {
         public const string Version = "V1.0.0.0";
         public const char ReferencePrefixCharacter = '$';
+        // Validate whether a key name is legal
         public static bool ValidateKey(string key)
         {
             for (int i = 0; i < key.Length; i++)
@@ -31,6 +32,7 @@ namespace Base.GML
             }
             return true;
         }
+        // Parse a reference string
         public static List<string> ParseReference(string reference)
         {
             StringReader reader = new StringReader(reference);
