@@ -2,8 +2,8 @@
  *  Created by Hyf042 on 1/13/12.
  *  Copyright 2012 Hyf042. All rights reserved.
  *
- *  This is a custom data described language named Water,
- *  The idea & framework of Water are comed from GLtracy,
+ *  This is a custom data described language named GML,
+ *  The idea & framework of GML are comed from GLtracy,
  *  reference website, you can see http://hi.baidu.com/gltracy/item/e205bf06830b60f2a01034ce
  */
 using System;
@@ -257,10 +257,12 @@ namespace Base.GML
         public Container Children { get { return children; } }
         public Type GetNodeType { get { return ValidateType(this); } }
         // Value Gets
-        public int ToInt { get { return Convert.ToInt32(value); } }
-        public long ToLong { get { return Convert.ToInt64(value); } }
-        public bool ToBoolean { get { return Convert.ToBoolean(value); } }
-        public double ToDouble { get { return Convert.ToDouble(value); } }
+        public int AsInt { get { return Convert.ToInt32(value); } }
+        public long AsLong { get { return Convert.ToInt64(value); } }
+        public bool AsBoolean { get { return Convert.ToBoolean(value); } }
+        public double AsDouble { get { return Convert.ToDouble(value); } }
+        public string AsString { get { return Value; } }
+        public byte[] AsBytes { get { return Encoding.UTF8.GetBytes(Value); } }
         // Query
         public bool HasName { get { return key != ""; } }
         public bool HasKey { get { return key != ""; } }
@@ -303,11 +305,12 @@ namespace Base.GML
         {
             return Create(value);
         }
-        public static implicit operator int(Node node) { return node.ToInt; }
-        public static implicit operator long(Node node) { return node.ToLong; }
-        public static implicit operator bool(Node node) { return node.ToBoolean; }
-        public static implicit operator double(Node node) { return node.ToDouble; }
+        public static implicit operator int(Node node) { return node.AsInt; }
+        public static implicit operator long(Node node) { return node.AsLong; }
+        public static implicit operator bool(Node node) { return node.AsBoolean; }
+        public static implicit operator double(Node node) { return node.AsDouble; }
         public static implicit operator string(Node node) { return node.Value; }
+        public static implicit operator byte[](Node node) { return node.AsBytes; }
         #endregion
 
         #region Contructor

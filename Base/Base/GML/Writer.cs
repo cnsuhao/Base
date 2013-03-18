@@ -2,8 +2,8 @@
  *  Created by Hyf042 on 1/13/12.
  *  Copyright 2012 Hyf042. All rights reserved.
  *
- *  This is a custom data described language named Water,
- *  The idea & framework of Water are comed from GLtracy,
+ *  This is a custom data described language named GML,
+ *  The idea & framework of GML are comed from GLtracy,
  *  reference website, you can see http://hi.baidu.com/gltracy/item/e205bf06830b60f2a01034ce
  */
 using System;

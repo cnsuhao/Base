@@ -2,8 +2,8 @@
  *  Created by Hyf042 on 1/13/12.
  *  Copyright 2012 Hyf042. All rights reserved.
  *
- *  This is a custom data described language named Water,
- *  The idea & framework of Water are comed from GLtracy,
+ *  This is a custom data described language named GML,
+ *  The idea & framework of GML are comed from GLtracy,
  *  reference website, you can see http://hi.baidu.com/gltracy/item/e205bf06830b60f2a01034ce
  */
 using System;
@@ -235,14 +235,20 @@ namespace Base.GML
 
             // check whether there is a '->' to child array
             token = lastToken;
-            while (token == Token.Arrow)
+            while (token == Token.Arrow || token == Token.Curly_Open)
             {
                 if (node.IsAnonymous)
-                    throw new ParserException("There must be either key or value after ->", lastTokenLine);
-                token = ParseToken();
+                {
+                    if (token == Token.Arrow)
+                        throw new ParserException("There must be either key or value after ->", lastTokenLine);
+                    else
+                        throw new ParserException("There can not be a anonymous {}, you should use []", lastTokenLine);
+                }
+                if (token == Token.Arrow)
+                    token = ParseToken();
 
                 hasArrow = true;
-                if (token == Token.Curly_Open || token == Token.Squared_Open)
+                if (token == Token.Curly_Open/* || token == Token.Squared_Open*/)
                     foreach (Node subNode in ParseArray())
                         node.AddChild(subNode);
                 else
@@ -254,7 +260,7 @@ namespace Base.GML
             // if nothing catched
             if (!hasArrow && node.IsAnonymous)
                 // check single array
-                if (token == Token.Curly_Open || token == Token.Squared_Open)
+                if (/*token == Token.Curly_Open || */token == Token.Squared_Open)
                     foreach (Node subNode in ParseArray())
                         node.AddChild(subNode);
                 // otherwise, error occured

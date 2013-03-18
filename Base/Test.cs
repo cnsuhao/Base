@@ -7,8 +7,40 @@ using System.Threading.Tasks;
 
 namespace Base
 {
-    class Test
+    abstract class Test
     {
+        public virtual string Name
+        {
+            get { return "Test"; }
+        }
+
+        protected virtual void Prepare()
+        {
+        }
+
+        protected abstract void DoTask();
+
+        public void DoTest()
+        {
+            Prepare();
+            DoTask();
+        }
+
+        public virtual bool Check()
+        {
+            return true;
+        }
+    }
+
+    class GMLTest : Test
+    {
+        bool check = false;
+
+        public override string Name
+        {
+            get { return "GMLTest"; }
+        }
+
         static string ReadFile(string filename)
         {
             StreamReader reader = new StreamReader(File.OpenRead(filename));
@@ -16,12 +48,7 @@ namespace Base
             return reader.ReadToEnd();
         }
 
-        private static int Clamp(int value, int min, int max)
-        {
-            return Math.Min(Math.Max(value, min), max);
-        }
-
-        static void Main(string[] args)
+        protected override void DoTask()
         {
             string content = ReadFile("input.gml");
             string json = ReadFile("json.txt");
@@ -30,10 +57,7 @@ namespace Base
             try
             {
                 GML.Node xmlNode = GML.Translator.XML.Import(xml);
-                DateTime now = DateTime.Now;
                 GML.Node root = GML.Parser.Deserialize(content);
-                TimeSpan delta = DateTime.Now - now;
-                Console.WriteLine(delta.ToString());
                 //Console.WriteLine(root.ToString());
 
                 foreach (GML.Node sub in root["battle"]["events"].Find("container@name='start_phase'")["event"].FindAll("action_dialog@side='delay'"))
@@ -45,11 +69,44 @@ namespace Base
                 StreamWriter writer = new StreamWriter(file);
                 writer.Write(root.ToString());
                 writer.Close();
+
+                check = true;
             }
             catch (GML.ParserException ex)
             {
                 Console.WriteLine(ex.ToString());
+                check = false;
             }
+        }
+
+        public override bool Check()
+        {
+            return check;
+        }
+    }
+
+    class TestEntry
+    {
+        static void Main(string[] args)
+        {
+            int count = 0;
+            Test[] tests = new Test[] { new GMLTest() };
+            foreach (Test test in tests)
+            {
+                Console.WriteLine("Do " + test.Name + " test...");
+                Console.WriteLine("--------------------------------------------------");
+                test.DoTest();
+                Console.WriteLine("--------------------------------------------------");
+                if (test.Check())
+                {
+                    count++;
+                    Console.WriteLine("Test succeed!");
+                }
+                else
+                    Console.WriteLine("Test failed");
+            }
+            Console.WriteLine();
+            Console.WriteLine("Total succeed : " + count.ToString() + "\t failed : " + (tests.Length - count).ToString());
         }
     }
 }

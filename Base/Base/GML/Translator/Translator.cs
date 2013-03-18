@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Base.GML.Translator
 {
+    /*
+     * Translator to translate other data descripting language into gml or do the inversed operation
+     */
     class Translator
     {
         protected static Node ImportRaw(Dictionary<string, object> dict)
