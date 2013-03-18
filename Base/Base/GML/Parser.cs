@@ -263,6 +263,9 @@ namespace Base.GML
                 if (/*token == Token.Curly_Open || */token == Token.Squared_Open)
                     foreach (Node subNode in ParseArray())
                         node.AddChild(subNode);
+                // Inverse no match
+                else if (token == Token.Inverse)
+                    throw new ParserException("~" + content + " not match", lastTokenLine);
                 // otherwise, error occured
                 else
                     throw new ParserException("Unknown characters " + content, lastTokenLine);
@@ -270,10 +273,10 @@ namespace Base.GML
             token = lastToken;
             if (token == Token.Inverse)
             {
-                token = ParseToken();
-                if (token != Token.Word || content.ToLower() != node.Key)
-                    throw new ParserException("~" + content + " not match", lastTokenLine);
-                ParseToken();
+                //if (token != Token.Word || content.ToLower() != node.Key)
+                //    throw new ParserException("~" + content + " not match", lastTokenLine);
+                if (content.ToLower() == node.Key)
+                    ParseToken();
             }
 
             return node;
@@ -523,6 +526,7 @@ namespace Base.GML
                     case '$':
                         return Token.Dollar;
                     case '~':
+                        content = NextWord;
                         return Token.Inverse;
                     case '/':
                         // Eat Comment // & /*...*/
