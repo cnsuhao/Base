@@ -3,12 +3,13 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Base
 {
     abstract class Test
     {
+        protected bool isPass = true;
+
         public virtual string Name
         {
             get { return "Test"; }
@@ -26,15 +27,15 @@ namespace Base
             DoTask();
         }
 
-        public virtual bool Check()
+        public bool IsPass
         {
-            return true;
+            get{return isPass;}
         }
     }
 
     class GMLTest : Test
     {
-        bool check = false;
+        
 
         public override string Name
         {
@@ -70,18 +71,40 @@ namespace Base
                 writer.Write(root.ToString());
                 writer.Close();
 
-                check = true;
+                isPass = true;
             }
             catch (GML.ParserException ex)
             {
                 Console.WriteLine(ex.ToString());
-                check = false;
+                isPass = false;
             }
         }
+    }
 
-        public override bool Check()
+    class CodecTest : Test
+    {
+        public override string Name
         {
-            return check;
+            get { return "CodecTest"; }
+        }
+
+        static string ReadFile(string filename)
+        {
+            StreamReader reader = new StreamReader(File.OpenRead(filename));
+
+            return reader.ReadToEnd();
+        }
+
+        protected override void DoTask()
+        {
+            string content = ReadFile("input.gml");
+
+            byte[] bytes = Base.Codec.Encryption.RSA.Instance.Encode(content);
+            string rsa = Encoding.UTF8.GetString(Base.Codec.Encryption.RSA.Instance.Decode(bytes));
+            bytes = Base.Codec.Encryption.RFA.Instance.Encode(rsa);
+            string rfa = Encoding.UTF8.GetString(Base.Codec.Encryption.RFA.Instance.Decode(bytes));
+
+            isPass = (content == rsa) && (rfa == rsa);
         }
     }
 
@@ -90,14 +113,14 @@ namespace Base
         static void Main(string[] args)
         {
             int count = 0;
-            Test[] tests = new Test[] { new GMLTest() };
+            Test[] tests = new Test[] { /*new GMLTest(), new CodecTest()*/ };
             foreach (Test test in tests)
             {
                 Console.WriteLine("Do " + test.Name + " test...");
                 Console.WriteLine("--------------------------------------------------");
                 test.DoTest();
                 Console.WriteLine("--------------------------------------------------");
-                if (test.Check())
+                if (test.IsPass)
                 {
                     count++;
                     Console.WriteLine("Test succeed!");
