@@ -41,6 +41,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Base\Codec\Encryption.cs" />
+    <Compile Include="Base\Codec\Hash.cs" />
     <Compile Include="Base\GML\Translator\Json\JsonTranslator.cs" />
     <Compile Include="Base\GML\Translator\Json\MiniJson.cs" />
     <Compile Include="Base\GML\Translator\Translator.cs" />
