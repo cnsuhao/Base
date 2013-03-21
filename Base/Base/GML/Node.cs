@@ -268,6 +268,7 @@ namespace Base.GML
         public bool HasValue { get { return value != ""; } }
         public bool HasAttribute { get { return !attributes.Empty; } }
         public bool HasChild { get { return !children.Empty; } }
+        public bool IsEmpty { get { return IsAnonymous && !HasAttribute && !HasChild; } }
         public bool IsRoot { get { return parent == null; } }
         public bool HasBase { get { return baseNode == null; } }
         public bool IsAnonymous { get { return !HasKey && !HasValue; } }

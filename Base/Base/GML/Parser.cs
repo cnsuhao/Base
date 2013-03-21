@@ -212,7 +212,7 @@ namespace Base.GML
             nodes.Add(node);
 
             // find attributes
-            while (token == Token.Bracket_Open)
+            if (token == Token.Bracket_Open)
             {
                 if (node.IsAnonymous)
                     throw new ParserException("There must be either key or value after attributes", lastTokenLine);
@@ -234,7 +234,7 @@ namespace Base.GML
 
             // check whether there is a '->' to child array
             token = lastToken;
-            while (token == Token.Arrow || token == Token.Curly_Open)
+            if (token == Token.Arrow || token == Token.Curly_Open)
             {
                 if (node.IsAnonymous)
                 {

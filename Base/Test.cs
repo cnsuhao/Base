@@ -51,25 +51,22 @@ namespace Base
 
         protected override void DoTask()
         {
-            string content = ReadFile("input.gml");
+            string content = ReadFile("resList.gml");
             string json = ReadFile("json.txt");
             string xml = ReadFile("xml.txt");
 
             try
             {
-                GML.Node xmlNode = GML.Translator.XML.Import(xml);
+                //GML.Node xmlNode = GML.Translator.XML.Import(xml);
                 GML.Node root = GML.Parser.Deserialize(content);
                 //Console.WriteLine(root.ToString());
 
-                foreach (GML.Node sub in root["battle"]["events"].Find("container@name='start_phase'")["event"].FindAll("action_dialog@side='delay'"))
+                foreach (Base.GML.Node fileNode in root.Children)
                 {
-                    Console.WriteLine(sub.ToString());
+                    Console.WriteLine(fileNode.ToString());
+                    //string url = fileNode.Attributes["url"];
+                    //Console.WriteLine(url);
                 }
-
-                FileStream file = new FileStream("output.txt", FileMode.Create);
-                StreamWriter writer = new StreamWriter(file);
-                writer.Write(root.ToString());
-                writer.Close();
 
                 isPass = true;
             }
@@ -113,7 +110,7 @@ namespace Base
         static void Main(string[] args)
         {
             int count = 0;
-            Test[] tests = new Test[] { /*new GMLTest(), new CodecTest()*/ };
+            Test[] tests = new Test[] { new GMLTest() /*new CodecTest()*/ };
             foreach (Test test in tests)
             {
                 Console.WriteLine("Do " + test.Name + " test...");
