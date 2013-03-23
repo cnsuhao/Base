@@ -37,6 +37,7 @@ namespace Base.GML
         public Node this[string key]
         {
             get {
+                key = key.ToLower();
                 if (map.ContainsKey(key))
                     return map[key];
                 else if (HasBase)
@@ -68,6 +69,8 @@ namespace Base.GML
 
         public bool Has(string key)
         {
+            key = key.ToLower();
+
             if (map.ContainsKey(key))
                 return true;
             else if (HasBase)
@@ -85,6 +88,8 @@ namespace Base.GML
         // remove by key, it will remove all the key with the same name
         public Container Remove(string key)
         {
+            key = key.ToLower();
+
             if (!map.ContainsKey(key))
                 return this;
             map.Remove(key);
@@ -219,7 +224,7 @@ namespace Base.GML
         #region Properties
         // Main Pro
         public string Name { get { return key; } }
-        public string Key { get { return key; } set { key = value; } }
+        public string Key { get { return key; } set { key = value.ToLower(); } }
         public string Value { get { return value; } set { this.value = value; } }
         public byte[] RawValue { get { return Encoding.UTF8.GetBytes(value); } }
         public Node Parent { get { return parent; } }
@@ -322,7 +327,7 @@ namespace Base.GML
         public Node(double v, string key = "", string baseRef = "") { Assign(v, key, baseRef); }
         public Node Assign<T>(T v, string key = "", string baseRef = "")
         {
-            this.key = key;
+            this.key = key.ToLower();
             this.value = v.ToString();
             this.baseRef = baseRef;
             return this;

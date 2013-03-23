@@ -3,40 +3,12 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace Base
 {
-    abstract class Test
+    class GMLTest : TestBase
     {
-        protected bool isPass = true;
-
-        public virtual string Name
-        {
-            get { return "Test"; }
-        }
-
-        protected virtual void Prepare()
-        {
-        }
-
-        protected abstract void DoTask();
-
-        public void DoTest()
-        {
-            Prepare();
-            DoTask();
-        }
-
-        public bool IsPass
-        {
-            get{return isPass;}
-        }
-    }
-
-    class GMLTest : Test
-    {
-        
-
         public override string Name
         {
             get { return "GMLTest"; }
@@ -61,11 +33,11 @@ namespace Base
                 GML.Node root = GML.Parser.Deserialize(content);
                 //Console.WriteLine(root.ToString());
 
-                foreach (Base.GML.Node fileNode in root.Children)
+                foreach (Base.GML.Node fileNode in root["manifest"].Children)
                 {
-                    Console.WriteLine(fileNode.ToString());
-                    //string url = fileNode.Attributes["url"];
-                    //Console.WriteLine(url);
+                    //Console.WriteLine(fileNode.ToString());
+                    string url = fileNode.Attributes["MD5"];
+                    Console.WriteLine(url);
                 }
 
                 isPass = true;
@@ -78,7 +50,7 @@ namespace Base
         }
     }
 
-    class CodecTest : Test
+    class CodecTest : TestBase
     {
         public override string Name
         {
@@ -105,28 +77,93 @@ namespace Base
         }
     }
 
+    class WebTest : TestBase
+    {
+        public override string Name
+        {
+            get { return "WebTest"; }
+        }
+
+        protected override void DoTask()
+        {
+            Base.GEvent.WebHandler request = new Base.GEvent.WebHandler();
+            request.Timeout = 100;
+            Console.WriteLine(request.GET("http://www.baidu.com"));
+            isPass = true;
+        }
+    }
+
+    class LoggerTest : TestBase
+    {
+        public override string Name
+        {
+            get { return "LoggerTest"; }
+        }
+
+        protected override void DoTask()
+        {
+            System.Threading.Thread.Sleep(1000);
+            Logger.Default.Log("okey doki");
+            System.Threading.Thread.Sleep(1000);
+            Logger.Default.Log("haha");
+            Logger.Default.Log("hehe", Logger.Level.Debug);
+            Logger.Default.Log("mama", Logger.Level.Warn);
+            try
+            {
+                Logger.Default.Log("dfdf", Logger.Level.Error);
+            }
+            catch (BaseException exception)
+            {
+                Console.WriteLine(exception.ToString());
+            }
+
+            isPass = true;
+        }
+    }
+
+    class ThreadTest : TestBase
+    {
+        public override string Name
+        {
+            get { return "ThreadTest"; }
+        }
+
+        protected override void DoTask()
+        {
+            Thread.TaskPool pool = new Thread.TaskPool(10);
+            pool.Start();
+
+            for (int i = 0; i < 3; i++)
+            {
+                int tmp = i;
+                pool.Run(new Thread.Task(() => Haha(tmp)));
+            }
+            pool.Join();
+
+            isPass = true;
+        }
+
+        void Haha(int data)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                Console.WriteLine(data.ToString());
+                System.Threading.Thread.Sleep(10);
+            }
+        }
+    }
+
     class TestEntry
     {
         static void Main(string[] args)
         {
-            int count = 0;
-            Test[] tests = new Test[] { new GMLTest() /*new CodecTest()*/ };
-            foreach (Test test in tests)
-            {
-                Console.WriteLine("Do " + test.Name + " test...");
-                Console.WriteLine("--------------------------------------------------");
-                test.DoTest();
-                Console.WriteLine("--------------------------------------------------");
-                if (test.IsPass)
-                {
-                    count++;
-                    Console.WriteLine("Test succeed!");
-                }
-                else
-                    Console.WriteLine("Test failed");
-            }
+            TestGroup test = new TestGroup();
+
+            test.Add(new ThreadTest())
+                .Test();
+
             Console.WriteLine();
-            Console.WriteLine("Total succeed : " + count.ToString() + "\t failed : " + (tests.Length - count).ToString());
+            Console.WriteLine("Total succeed : " + test.Passed.ToString() + "\t failed : " + test.Failed.ToString());
         }
     }
 }

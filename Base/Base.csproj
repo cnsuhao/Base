@@ -34,6 +34,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -41,8 +42,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Base\Basic\Logger.cs" />
+    <Compile Include="Base\Basic\Test.cs" />
     <Compile Include="Base\Codec\Encryption.cs" />
     <Compile Include="Base\Codec\Hash.cs" />
+    <Compile Include="Base\Basic\Exception.cs" />
+    <Compile Include="Base\Basic\Platform.cs" />
+    <Compile Include="Base\Basic\Utility.cs" />
+    <Compile Include="Base\GEvent\Event.cs" />
+    <Compile Include="Base\GEvent\Loop.cs" />
+    <Compile Include="Base\GEvent\Peer.cs" />
     <Compile Include="Base\GML\Translator\Json\JsonTranslator.cs" />
     <Compile Include="Base\GML\Translator\Json\MiniJson.cs" />
     <Compile Include="Base\GML\Translator\Translator.cs" />
@@ -51,6 +60,11 @@
     <Compile Include="Base\GML\Parser.cs" />
     <Compile Include="Base\GML\Node.cs" />
     <Compile Include="Base\GML\Writer.cs" />
+    <Compile Include="Base\GEvent\Basic.cs" />
+    <Compile Include="Base\GEvent\Net\Web.cs" />
+    <Compile Include="Base\Thread\Basic.cs" />
+    <Compile Include="Base\Thread\Task.cs" />
+    <Compile Include="Base\Thread\TaskPool.cs" />
     <Compile Include="Test.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -58,7 +72,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Base\GNet\" />
     <Folder Include="Base\IO\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
