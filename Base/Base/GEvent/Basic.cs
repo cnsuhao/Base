@@ -75,6 +75,11 @@ namespace Base.GEvent
         {
             get { return Ping("http://www.baidu.com"); }
         }
+
+        public static void Sleep(int miliseconds)
+        {
+            System.Threading.Thread.Sleep(miliseconds);
+        }
     };
     #endregion
 }

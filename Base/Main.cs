@@ -130,14 +130,10 @@ namespace Base
 
         protected override void DoTask()
         {
-            Thread.TaskPool pool = new Thread.TaskPool(10);
+            GThread.TaskPool pool = new GThread.TaskPool(10);
             pool.Start();
 
-            for (int i = 0; i < 3; i++)
-            {
-                int tmp = i;
-                pool.Run(new Thread.Task(() => Haha(tmp)));
-            }
+            pool.Run(new GThread.Task[]{new GThread.Task(() => Haha(0)), new GThread.Task(()=>Haha(1))});
             pool.Join();
 
             isPass = true;
@@ -153,17 +149,44 @@ namespace Base
         }
     }
 
+    class EventTest : TestBase
+    {
+        public override string Name
+        {
+            get { return "EventTest"; }
+        }
+
+        protected override void DoTask()
+        {
+            GEvent.WebPeer web = new GEvent.WebPeer();
+            GEvent.Quest tryQuest = web.GET("http://www.baidu.com")
+                .RegisterCompleteCallback(
+                (quest) =>
+                {
+                    Logger.Default.Info("Receive:\n" + (quest as GEvent.WebQuest).Content);
+                })
+                .RegisterStartCallback(
+                (quest) =>
+                {
+                    Logger.Default.Info("Ready to GET...");
+                })
+                .Start();
+
+            GEvent.Loop.Global.Start();
+            GEvent.Loop.Global.Join();
+
+            isPass = true;
+        }
+    }
+
     class TestEntry
     {
         static void Main(string[] args)
         {
             TestGroup test = new TestGroup();
 
-            test.Add(new ThreadTest())
+            test.Add(new EventTest())
                 .Test();
-
-            Console.WriteLine();
-            Console.WriteLine("Total succeed : " + test.Passed.ToString() + "\t failed : " + test.Failed.ToString());
         }
     }
 }

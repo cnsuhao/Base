@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace Base.Thread
+namespace Base.GThread
 {
     class Condition
     {

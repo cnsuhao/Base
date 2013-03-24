@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace Base.Thread
+namespace Base.GThread
 {
     using System.Threading;
     class TaskPool
@@ -20,6 +20,7 @@ namespace Base.Thread
         public bool IsAccept { get { return isAccept; } }
         public int ThreadCount { get{return threads.Count;} }
         public int TaskCount { get { return tasks.Count; } }
+
         public TaskPool(int threadNum = DefaultMaxThread)
         {
             isRunning = false;
@@ -29,7 +30,6 @@ namespace Base.Thread
             for (int i = 0; i < threadNum; i++)
                 threads.Add(new Thread(RunInThread));
         }
-
         public void Start()
         {
             Join();
@@ -69,7 +69,26 @@ namespace Base.Thread
             if (IsRunning)
                 newThread.Start();
         }
+        public void Pause()
+        {
+            isAccept = false;
+        }
+        public void Resume()
+        {
+            isAccept = true;
+        }
+        public void Resize(int threadNum)
+        {
+            if (IsRunning)
+            {
+                Logger.Default.Warning("TaskPool: You can not resize pool during running!");
+                return;
+            }
 
+            threads.Clear();
+            for (int i = 0; i < threadNum; i++)
+                threads.Add(new Thread(RunInThread));
+        }
         public void Run(Task task)
         {
             if (!IsRunning)
@@ -93,6 +112,31 @@ namespace Base.Thread
                 }
             }
         }
+        public void Run(Task[] tasks)
+        {
+            if (!IsRunning)
+            {
+                Logger.Default.Warning("TaskPool: This pool does not start yet!");
+                return;
+            }
+            if (!IsAccept)
+            {
+                Logger.Default.Warning("TaskPool: This pool does not accept task!");
+                return;
+            }
+            if (ThreadCount == 0)
+                foreach (Task task in tasks)
+                    task.Start();
+            else
+            {
+                lock (tasks)
+                {
+                    foreach (Task task in tasks)
+                        this.tasks.Enqueue(task);
+                    condition.NotifyAll();
+                }
+            }
+        }
 
         Task Take()
         {
@@ -107,7 +151,6 @@ namespace Base.Thread
                 return tasks.Dequeue();
             }
         }
-
         void RunInThread()
         {
             try

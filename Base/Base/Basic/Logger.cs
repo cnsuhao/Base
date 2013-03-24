@@ -290,16 +290,19 @@ namespace Base
         }
         public void Log(string log, Level level, params object[] args)
         {
-            Log(String.Format(log, args), level);
+            if (args.Length > 0)
+                Log(String.Format(log, args), level);
+            else
+                Log(log, level);
         }
 
         public void Info(string log, params object[] args)
         {
-            Log(String.Format(log, args), Level.Info);
+            Log(log, Level.Info, args);
         }
         public void Error(string log, params object[] args)
         {
-            Log(String.Format(log, args), Level.Error);
+            Log(log, Level.Error, args);
         }
         public void ErrorNoThrow(string log, params object[] args)
         {
@@ -310,11 +313,11 @@ namespace Base
         }
         public void Warning(string log, params object[] args)
         {
-            Log(String.Format(log, args), Level.Warn);
+            Log(log, Level.Warn, args);
         }
         public void Debug(string log, params object[] args)
         {
-            Log(String.Format(log, args), Level.Debug);
+            Log(log, Level.Debug, args);
         }
     }
 }

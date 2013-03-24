@@ -3,10 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Base.Thread
+namespace Base.GThread
 {
     using System.Threading;
-    class Task
+    /// <summary>
+    /// Task Class
+    /// Implement a class contains single task
+    /// </summary>
+    public class Task
     {
         public delegate void OnTaskDelegate(object arg);
         public delegate void OnEmptyDelegate();

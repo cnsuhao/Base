@@ -42,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Base\Basic\Asset.cs" />
     <Compile Include="Base\Basic\Logger.cs" />
     <Compile Include="Base\Basic\Test.cs" />
     <Compile Include="Base\Codec\Encryption.cs" />
@@ -62,10 +63,10 @@
     <Compile Include="Base\GML\Writer.cs" />
     <Compile Include="Base\GEvent\Basic.cs" />
     <Compile Include="Base\GEvent\Net\Web.cs" />
-    <Compile Include="Base\Thread\Basic.cs" />
-    <Compile Include="Base\Thread\Task.cs" />
-    <Compile Include="Base\Thread\TaskPool.cs" />
-    <Compile Include="Test.cs" />
+    <Compile Include="Base\GThread\Basic.cs" />
+    <Compile Include="Base\GThread\Task.cs" />
+    <Compile Include="Base\GThread\TaskPool.cs" />
+    <Compile Include="Main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

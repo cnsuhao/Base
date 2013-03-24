@@ -133,13 +133,46 @@ namespace Base.GEvent
         }
     }
 
-    class WebPeer : Peer
+    public class WebQuest : Quest
     {
+        public string Content { get; set; }
+        public WebQuest(OnQuestDelegate task, Peer peer)
+            : base(task, peer, EventType.WEB)
+        {
+        }
+    }
+
+    public class WebPeer : Peer
+    {
+        WebHandler handler = new WebHandler();
+
         public WebPeer() { }
 
-        public bool Get(string url, params object[] args)
+        public Quest GET(string url, params object[] args)
         {
-            return false;
+            return NewQuest(
+                (quest) =>
+                {
+                    lock (handler)
+                    {
+                        (quest as WebQuest).Content = handler.GET(url, args);
+                    }
+                });
+        }
+        public Quest POST(string url, params object[] args)
+        {
+            return NewQuest(
+                (quest) =>
+                {
+                    lock (handler)
+                    {
+                        (quest as WebQuest).Content = handler.POST(url, args);
+                    }
+                });
+        }
+        public Quest NewQuest(Quest.OnQuestDelegate task)
+        {
+            return new WebQuest(task, this);
         }
     }
 }
