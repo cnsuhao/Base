@@ -56,7 +56,10 @@ namespace Base.GThread
             if (IsRunning)
             {
                 isRunning = false;
-                condition.NotifyAll();
+                lock (tasks)
+                {
+                    condition.NotifyAll();
+                }
 
                 foreach (Thread thread in threads)
                     thread.Join();

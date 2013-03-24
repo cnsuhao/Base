@@ -114,6 +114,14 @@ namespace Base.GEvent
                     }
                 }
             }
+            foreach (Quest quest in quests)
+            {
+                if (quest.IsOver)
+                {
+                    quests.Remove(quest);
+                    break;
+                }
+            } 
         }
     }
 }
