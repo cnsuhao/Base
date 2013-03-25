@@ -159,18 +159,21 @@ namespace Base
         protected override void DoTask()
         {
             GEvent.WebPeer web = new GEvent.WebPeer();
-            GEvent.Quest tryQuest = web.GET("http://www.baidu.com")
-                .RegisterCompleteCallback(
-                (quest) =>
-                {
-                    Logger.Default.Info("Receive:\n" + (quest as GEvent.WebQuest).Content);
-                })
-                .RegisterStartCallback(
-                (quest) =>
-                {
-                    Logger.Default.Info("Ready to GET...");
-                })
-                .Start();
+            for (int i = 0; i < 5; i++)
+            {
+                GEvent.Quest tryQuest = web.GET("http://www.baidu.com")
+                    .RegisterCompleteCallback(
+                    (quest, result) =>
+                    {
+                        Logger.Default.Info("Receive");
+                    })
+                    .RegisterStartCallback(
+                    (quest) =>
+                    {
+                        Logger.Default.Info("Ready to GET...");
+                    })
+                    .Start();
+            }
 
             GEvent.Loop.Global.Start();
             GEvent.Loop.Global.Join();

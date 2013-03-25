@@ -47,7 +47,7 @@ namespace Base.GEvent
             if (url.Length == 0 || url[url.Length-1] != '&')
                 url += '&';
 
-            return url + GenArgsStr(Utility.GenHashTable(args));
+            return url + GenArgsStr(Utility.HashTable(args));
         }
 
         public void AddCookie(string key, string value, string path = "", string domain = "")
@@ -62,7 +62,7 @@ namespace Base.GEvent
 
         public string POST(string url, params object[] args)
         {
-            return POST(url, Utility.GenHashTable(args));
+            return POST(url, Utility.HashTable(args));
         }
         public string GET(string url, params object[] args)
         {
@@ -148,25 +148,42 @@ namespace Base.GEvent
 
         public WebPeer() { }
 
+        public int Timeout
+        {
+            set
+            {
+                lock (handler)
+                {
+                    handler.Timeout = value;
+                }
+            }
+            get
+            {
+                lock (handler)
+                {
+                    return handler.Timeout;
+                }
+            }
+        }
         public Quest GET(string url, params object[] args)
         {
             return NewQuest(
-                (quest) =>
+                (bundle) =>
                 {
                     lock (handler)
                     {
-                        (quest as WebQuest).Content = handler.GET(url, args);
+                        return handler.GET(url, args);
                     }
                 });
         }
         public Quest POST(string url, params object[] args)
         {
             return NewQuest(
-                (quest) =>
+                (bundle) =>
                 {
                     lock (handler)
                     {
-                        (quest as WebQuest).Content = handler.POST(url, args);
+                        return handler.POST(url, args);
                     }
                 });
         }

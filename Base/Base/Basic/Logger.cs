@@ -282,9 +282,6 @@ namespace Base
 
                 RawLog(log, level);
 
-                if (level == Level.Error && HasFeature(Feature.ThrowError))
-                    throw new BaseException(log, "Logger");
-
                 logList.Add(bundle);
             }
         }
@@ -303,13 +300,16 @@ namespace Base
         public void Error(string log, params object[] args)
         {
             Log(log, Level.Error, args);
+
+            lock (syncRoot)
+            {
+                if (HasFeature(Feature.ThrowError))
+                    throw new BaseException(log, "Logger");
+            }
         }
         public void ErrorNoThrow(string log, params object[] args)
         {
-            bool flag = HasFeature(Feature.ThrowError);
-            SetFeature(Feature.ThrowError, false);
-            Error(log, args);
-            SetFeature(Feature.ThrowError, true);
+            Log(log, Level.Error, args);
         }
         public void Warning(string log, params object[] args)
         {
