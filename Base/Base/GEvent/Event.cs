@@ -115,7 +115,7 @@ namespace Base.GEvent
         Peer peer = null;
         StatusEnum status = StatusEnum.Idle;
         EventType eventType = EventType.Undefined;
-        ErrorBundle erron = null;
+        ErrorBundle error = null;
         OnQuestDelegate task = null;
         QuestBundle questBundle;
 
@@ -131,7 +131,7 @@ namespace Base.GEvent
         public bool IsStop { get { return IsOver || status == StatusEnum.Complete; } }
         public StatusEnum Status { get { return status; } }
         public EventType EventType { get { return eventType; } }
-        public ErrorBundle Erron { get { return erron; } }
+        public ErrorBundle Error { get { return error; } }
         public QuestBundle Bundle { get { return questBundle; } }
         public Peer GetPeer { get { return peer; } }
         public Loop GetLoop { get { return peer.BaseLoop; } }
@@ -243,10 +243,10 @@ namespace Base.GEvent
         {
             //Log
             status = StatusEnum.Error;
-            erron = new ErrorBundle(EventType, code, new BaseException(Message, "GEvent"));
-            Logger.Default.ErrorNoThrow("Quest: erron since " + erron.ToString());
+            error = new ErrorBundle(EventType, code, new BaseException(Message, "GEvent"));
+            Logger.Default.ErrorNoThrow("Quest: erron since " + error.ToString());
             if (OnError != null)
-                _SendResponse((quest) => OnError(quest, erron), Response.TypeEnum.Error);
+                _SendResponse((quest) => OnError(quest, error), Response.TypeEnum.Error);
             else
                 _NullResponse(Response.TypeEnum.Error);
         }
@@ -262,7 +262,7 @@ namespace Base.GEvent
 
     public class Response
     {
-        public enum TypeEnum { Start, StatusChange, Complete, Error, Undefined };
+        public enum TypeEnum { Start, StatusChange, Complete, Error, Undefined, External};
         public delegate void CallbackDelegate(Quest quest);
 
         TypeEnum type = TypeEnum.Undefined;

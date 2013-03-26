@@ -50,7 +50,7 @@ namespace Base
         }
     }
 
-    class CodecTest : TestBase
+    /*class CodecTest : TestBase
     {
         public override string Name
         {
@@ -75,7 +75,7 @@ namespace Base
 
             isPass = (content == rsa) && (rfa == rsa);
         }
-    }
+    }*/
 
     class WebTest : TestBase
     {
@@ -87,8 +87,7 @@ namespace Base
         protected override void DoTask()
         {
             Base.GEvent.WebHandler request = new Base.GEvent.WebHandler();
-            request.Timeout = 100;
-            Console.WriteLine(request.GET("http://www.baidu.com"));
+            Console.WriteLine(request.Get("http://www.baidu.com"));
             isPass = true;
         }
     }
@@ -159,10 +158,9 @@ namespace Base
         protected override void DoTask()
         {
             GEvent.WebPeer web = new GEvent.WebPeer();
-            web.Timeout = 1;
             for (int i = 0; i < 5; i++)
             {
-                GEvent.Quest tryQuest = web.GET("http://www.baidu.com")
+                GEvent.Quest tryQuest = web.Download("http://42.121.125.129/crossdomain.xml", "crossdomain.xml")
                     .RegisterCompleteCallback(
                     (quest, result) =>
                     {

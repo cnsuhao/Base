@@ -18,6 +18,13 @@ namespace Base.GEvent
 {
     class WebHandler
     {
+        class DownloadBundle
+        {
+            public System.Threading.AutoResetEvent waiter;
+            public byte[] bytes = null;
+            public bool success;
+        }
+
         int timeout = -1;
         CookieContainer cookie = new CookieContainer();
 
@@ -60,18 +67,71 @@ namespace Base.GEvent
                 cookie.Add(new Cookie(key, value, path, domain));
         }
 
-        public string POST(string url, params object[] args)
+        public string Post(string url, params object[] args)
         {
-            return POST(url, Utility.HashTable(args));
+            return Post(url, Utility.HashTable(args));
         }
-        public string GET(string url, params object[] args)
+        public string Get(string url, params object[] args)
         {
             url = CombineUrl(url, args);
 
-            return GET(url);
+            return Get(url);
+        }
+        public byte[] Download(string uri, string localPath = "", string QueryHeader = "BaseHeader")
+        {
+            using (WebClient fileDownloader = new WebClient())
+            {
+                fileDownloader.Encoding = System.Text.Encoding.UTF8;
+                fileDownloader.Headers.Add("User-Agent", QueryHeader);
+                fileDownloader.DownloadDataCompleted += new DownloadDataCompletedEventHandler(DownloadDataCompleted);
+
+                DownloadBundle bundle = new DownloadBundle();
+                bundle.waiter = new System.Threading.AutoResetEvent(false);
+                bundle.success = false;
+
+                fileDownloader.DownloadDataAsync(new Uri(uri), bundle);
+                
+                // block until download complete
+                bundle.waiter.WaitOne();
+
+                if (!bundle.success)
+                    throw new GEventException(new ErrorBundle(EventType.WEB, ErrorCode.DownloadFailed, "Download File Failed"));
+
+                if (localPath != "")
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(localPath)));
+                    using (FileStream fs = new FileStream(localPath, FileMode.Create))
+                        using (BinaryWriter bw = new BinaryWriter(fs))
+                        {
+                            bw.Write(bundle.bytes);
+                            bw.Close();
+                            fs.Close();
+                        }
+                }
+
+                return bundle.bytes;
+            }
+        }
+
+        protected void DownloadDataCompleted(object sender, DownloadDataCompletedEventArgs e)
+        {
+            DownloadBundle bundle = e.UserState as DownloadBundle;
+
+            try
+            {
+                if (!e.Cancelled && e.Error == null)
+                {
+                    bundle.bytes = (byte[])e.Result;
+                    bundle.success = true;
+                }
+            }
+            finally
+            {
+                bundle.waiter.Set();
+            }
         }
         
-        protected virtual string POST(string url, Hashtable args)
+        protected virtual string Post(string url, Hashtable args)
         {
             string param = GenArgsStr(args);
             byte[] postData = Encoding.ASCII.GetBytes(param);
@@ -95,7 +155,7 @@ namespace Base.GEvent
                 return rs.ReadToEnd();
             }
         }
-        protected virtual string GET(string url)
+        protected virtual string Get(string url)
         {
             HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
             req.Timeout = timeout;
@@ -171,31 +231,38 @@ namespace Base.GEvent
                 this
             );
         }
-        public Quest GET(string url, params object[] args)
+        public Quest Get(string url, params object[] args)
         {
             return WebQuestHandler(
                 (bundle) =>
                 {
                     lock (handler)
                     {
-                        return handler.GET(url, args);
+                        return handler.Get(url, args);
                     }
                 });
         }
-        public Quest POST(string url, params object[] args)
+        public Quest Post(string url, params object[] args)
         {
             return WebQuestHandler(
                 (bundle) =>
                 {
                     lock (handler)
                     {
-                        return handler.POST(url, args);
+                        return handler.Post(url, args);
                     }
                 });
         }
-        public Quest NewQuest(Quest.OnQuestDelegate task)
+        public Quest Download(string uri, string localPath = "", string queryHeader = "BaseHeader")
         {
-            return new WebQuest(task, this);
+            return WebQuestHandler(
+                (bundle) =>
+                {
+                    lock (handler)
+                    {
+                        return handler.Download(uri, localPath, queryHeader);
+                    }
+                });
         }
     }
 }

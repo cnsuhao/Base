@@ -20,11 +20,14 @@ namespace Base.GEvent
     {
         NoError,
 
+        // Network
         Timeout,
 
         ConnectionFailed,
 
         ConnectionClosed,
+
+        DownloadFailed,
 
         WebError,
 
@@ -64,7 +67,7 @@ namespace Base.GEvent
 
         public override string ToString()
         {
-            return "ErrorCode:" + erron.ToString() + " Exception: " + exception.ToString();
+            return "ErrorCode:" + erron.ToString() + " Exception: " + description;
         }
     };
     public class GEventException : BaseException
@@ -85,7 +88,7 @@ namespace Base.GEvent
 
         public override string ToString()
         {
-            return "ErrorCode:" + bundle.Erron.ToString() + " Exception: " + base.ToString();
+            return "ErrorCode:" + bundle.Erron.ToString() + " Exception: " + bundle.Description;
         }
     }
     #endregion
