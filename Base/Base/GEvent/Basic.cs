@@ -78,12 +78,25 @@ namespace Base.GEvent
         {
             get { return bundle.Erron; }
         }
+        public ErrorBundle Bundle
+        {
+            get { return bundle; }
+        }
 
         public GEventException(ErrorBundle erron)
             : base(erron.Description, "GEvent")
         {
             Assert.Null(erron);
             this.bundle = erron;
+        }
+        public GEventException(EventType eventType, ErrorCode errorCode, string description = "") : base(description, "GEvent")
+        {
+            this.bundle = new ErrorBundle(eventType, errorCode, description);
+        }
+        public GEventException(EventType eventType, ErrorCode errorCode, Exception exception)
+            : base(exception.Message, "GEvent")
+        {
+            this.bundle = new ErrorBundle(eventType, errorCode, exception);
         }
 
         public override string ToString()

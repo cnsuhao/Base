@@ -80,6 +80,10 @@ namespace Base.GEvent
         {
             quest._Error(Message, code);
         }
+        public void Error(GEventException gexception)
+        {
+            quest._Error(gexception);
+        }
         public void Break()
         {
             quest._Break();
@@ -197,7 +201,7 @@ namespace Base.GEvent
             }
             catch (GEventException exception)
             {
-                _Error(exception.Message, exception.Code);
+                _Error(exception);
             }
             catch (Exception exception)
             {
@@ -244,7 +248,17 @@ namespace Base.GEvent
             //Log
             status = StatusEnum.Error;
             error = new ErrorBundle(EventType, code, new BaseException(Message, "GEvent"));
-            Logger.Default.ErrorNoThrow("Quest: erron since " + error.ToString());
+            Logger.Default.ErrorNoThrow("Quest.Error: " + error.ToString());
+            if (OnError != null)
+                _SendResponse((quest) => OnError(quest, error), Response.TypeEnum.Error);
+            else
+                _NullResponse(Response.TypeEnum.Error);
+        }
+        public void _Error(GEventException gexception)
+        {
+            status = StatusEnum.Error;
+            error = gexception.Bundle;
+            Logger.Default.ErrorNoThrow("Quest.Error: " + error.ToString());
             if (OnError != null)
                 _SendResponse((quest) => OnError(quest, error), Response.TypeEnum.Error);
             else
