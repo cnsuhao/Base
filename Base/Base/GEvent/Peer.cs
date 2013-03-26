@@ -7,9 +7,8 @@ namespace Base.GEvent
 {
     public class Peer
     {
-        public delegate void TaskDelegate(Peer peer);
-        public delegate void EmptyTaskDelegate();
-        
+        public delegate void PeerTaskDelegate(Peer peer);
+
         Loop loop = null;
 
         public Loop BaseLoop { set { loop = value; } get { return loop; } }
@@ -21,13 +20,13 @@ namespace Base.GEvent
             loop.Attach(this);
         }
 
-        public void Invoke(TaskDelegate task)
+        public void Invoke(PeerTaskDelegate task)
         {
-            BaseLoop.Response(new Response(null, (_) => task(this), Response.TypeEnum.External));
+            BaseLoop.Invoke(() => task(this));
         }
-        public void Invoke(EmptyTaskDelegate task)
+        public void Invoke(Loop.EmptyTaskDelegate task)
         {
-            BaseLoop.Response(new Response(null, (_) => task(), Response.TypeEnum.External));
+            BaseLoop.Invoke(task);
         }
         public virtual void OnStatusChange(Quest quest)
         {

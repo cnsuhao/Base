@@ -8,6 +8,8 @@ namespace Base.GEvent
     using Base.GThread;
     public class Loop
     {
+        public delegate void EmptyTaskDelegate();
+
         public enum StatusEnum { IDLE, RUNNING, PAUSE };
         readonly object syncObject = new object();
         const int MaxThread = 10;
@@ -26,6 +28,11 @@ namespace Base.GEvent
         ~Loop()
         {
             pool.Stop();
+        }
+
+        public void Invoke(EmptyTaskDelegate task)
+        {
+            Response(new Response(null, (_) => task(), GEvent.Response.TypeEnum.External));
         }
 
         public bool Has(Peer peer)
