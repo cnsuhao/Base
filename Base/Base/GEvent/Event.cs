@@ -76,6 +76,22 @@ namespace Base.GEvent
                 return questValue[key];
             }
         }
+        public void Error(string Message, ErrorCode code = ErrorCode.Undefined)
+        {
+            quest._Error(Message, code);
+        }
+        public void Break()
+        {
+            quest._Break();
+        }
+        public void SendResponse(Response.CallbackDelegate callback, Response.TypeEnum type = Response.TypeEnum.Undefined)
+        {
+            quest._SendResponse(callback, type);
+        }
+        public void NullResponse(Response.TypeEnum type = Response.TypeEnum.Undefined)
+        {
+            quest._NullResponse(type);
+        }
 
         public object this[string key]
         {
@@ -162,23 +178,30 @@ namespace Base.GEvent
             {
                 status = StatusEnum.Ready;
                 if (OnStart != null)
-                    SendResponse((quest) => OnStart(quest), Response.TypeEnum.Start);
+                    _SendResponse((quest) => OnStart(quest), Response.TypeEnum.Start);
                 else
-                    NullResponse(Response.TypeEnum.Start);
+                    _NullResponse(Response.TypeEnum.Start);
                 status = StatusEnum.Running;
                 lock (questBundle)
                 {
                     questBundle.Result = task(questBundle);
                 }
-                if (OnComplete != null)
-                    SendResponse((quest) => OnComplete(quest, questBundle.Result), Response.TypeEnum.Complete);
-                else
-                    NullResponse(Response.TypeEnum.Complete);
-                status = StatusEnum.Complete;
+                if (status == StatusEnum.Running)
+                {
+                    if (OnComplete != null)
+                        _SendResponse((quest) => OnComplete(quest, questBundle.Result), Response.TypeEnum.Complete);
+                    else
+                        _NullResponse(Response.TypeEnum.Complete);
+                    status = StatusEnum.Complete;
+                }
+            }
+            catch (GEventException exception)
+            {
+                _Error(exception.Message, exception.Code);
             }
             catch (Exception exception)
             {
-                Error(exception.Message, ErrorCode.Break);
+                _Error(exception.Message, ErrorCode.ThrowOut);
             }
         }
         public void Finally()
@@ -212,26 +235,26 @@ namespace Base.GEvent
             return this;
         }
 
-        void Break()
+        public void _Break()
         {
-            Error("Event has been broken down!", ErrorCode.Break);
+            _Error("Event has been broken down!", ErrorCode.Break);
         }
-        void Error(string Message, ErrorCode code = ErrorCode.Undefined)
+        public void _Error(string Message, ErrorCode code = ErrorCode.Undefined)
         {
             //Log
             status = StatusEnum.Error;
             erron = new ErrorBundle(EventType, code, new BaseException(Message, "GEvent"));
-            Logger.Default.ErrorNoThrow("Quest: erron since " + erron.OriginException.ToString());
+            Logger.Default.ErrorNoThrow("Quest: erron since " + erron.ToString());
             if (OnError != null)
-                SendResponse((quest) => OnError(quest, erron), Response.TypeEnum.Error);
+                _SendResponse((quest) => OnError(quest, erron), Response.TypeEnum.Error);
             else
-                NullResponse(Response.TypeEnum.Error);
+                _NullResponse(Response.TypeEnum.Error);
         }
-        void SendResponse(Response.CallbackDelegate callback, Response.TypeEnum type = Response.TypeEnum.Undefined)
+        public void _SendResponse(Response.CallbackDelegate callback, Response.TypeEnum type = Response.TypeEnum.Undefined)
         {
             GetLoop.Response(new Response(this, callback, type));
         }
-        void NullResponse(Response.TypeEnum type = Response.TypeEnum.Undefined)
+        public void _NullResponse(Response.TypeEnum type = Response.TypeEnum.Undefined)
         {
             GetLoop.Response(new Response(this, null, type));
         }

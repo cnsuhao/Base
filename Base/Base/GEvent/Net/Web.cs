@@ -73,62 +73,40 @@ namespace Base.GEvent
         
         protected virtual string POST(string url, Hashtable args)
         {
-            try
+            string param = GenArgsStr(args);
+            byte[] postData = Encoding.ASCII.GetBytes(param);
+
+            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+
+            req.Timeout = timeout;
+            req.CookieContainer = cookie;
+            req.Method = "POST";
+            req.ContentType = "application/x-www-form-urlencoded;charset=utf8";
+            req.ContentLength = postData.Length;
+
+            using (Stream reqStream = req.GetRequestStream())
             {
-                string param = GenArgsStr(args);
-                byte[] postData = Encoding.ASCII.GetBytes(param);
-
-                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
-
-                req.Timeout = timeout;
-                req.CookieContainer = cookie;
-                req.Method = "POST";
-                req.ContentType = "application/x-www-form-urlencoded;charset=utf8";
-                req.ContentLength = postData.Length;
-
-                using (Stream reqStream = req.GetRequestStream())
-                {
-                    reqStream.Write(postData, 0, postData.Length);
-                }
-                using (WebResponse wr = req.GetResponse())
-                {
-                    Stream stream = wr.GetResponseStream();
-                    StreamReader rs = new StreamReader(stream);
-                    return rs.ReadToEnd();
-                }
+                reqStream.Write(postData, 0, postData.Length);
             }
-            catch (System.Net.WebException exception)
+            using (WebResponse wr = req.GetResponse())
             {
-                throw new GEventException(new ErrorBundle(EventType.WEB, ErrorCode.WebError, exception));
-            }
-            catch (System.Exception exception)
-            {
-                throw new GEventException(new ErrorBundle(EventType.WEB, ErrorCode.Undefined, exception));
+                Stream stream = wr.GetResponseStream();
+                StreamReader rs = new StreamReader(stream);
+                return rs.ReadToEnd();
             }
         }
         protected virtual string GET(string url)
         {
-            try
-            {
-                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
-                req.Timeout = timeout;
-                req.CookieContainer = cookie;
-                req.Method = "GET";
+            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+            req.Timeout = timeout;
+            req.CookieContainer = cookie;
+            req.Method = "GET";
 
-                using (WebResponse wr = req.GetResponse())
-                {
-                    Stream stream = wr.GetResponseStream();
-                    StreamReader rs = new StreamReader(stream);
-                    return rs.ReadToEnd();
-                }
-            }
-            catch (System.Net.WebException exception)
+            using (WebResponse wr = req.GetResponse())
             {
-                throw new GEventException(new ErrorBundle(EventType.WEB, ErrorCode.WebError, exception));
-            }
-            catch (System.Exception exception)
-            {
-                throw new GEventException(new ErrorBundle(EventType.WEB, ErrorCode.Undefined, exception));
+                Stream stream = wr.GetResponseStream();
+                StreamReader rs = new StreamReader(stream);
+                return rs.ReadToEnd();
             }
         }
     }
@@ -165,9 +143,37 @@ namespace Base.GEvent
                 }
             }
         }
+        public Quest WebQuestHandler(Quest.OnQuestDelegate func)
+        {
+            return new WebQuest(
+                (bundle) =>
+                {
+                    try
+                    {
+                        return func(bundle);
+                    }
+                    catch (System.Net.WebException exception)
+                    {
+                        if (exception.Status == WebExceptionStatus.Timeout)
+                            throw new GEventException(new ErrorBundle(EventType.WEB, ErrorCode.Timeout, exception));
+                        else if (exception.Status == WebExceptionStatus.ConnectFailure || exception.Status == WebExceptionStatus.NameResolutionFailure)
+                            throw new GEventException(new ErrorBundle(EventType.WEB, ErrorCode.ConnectionFailed, exception));
+                        else if (exception.Status == WebExceptionStatus.ConnectionClosed)
+                            throw new GEventException(new ErrorBundle(EventType.WEB, ErrorCode.ConnectionClosed, exception));
+                        else
+                            throw new GEventException(new ErrorBundle(EventType.WEB, ErrorCode.WebError, exception));
+                    }
+                    catch (System.Exception exception)
+                    {
+                        throw new GEventException(new ErrorBundle(EventType.WEB, ErrorCode.WebError, exception));
+                    }
+                },
+                this
+            );
+        }
         public Quest GET(string url, params object[] args)
         {
-            return NewQuest(
+            return WebQuestHandler(
                 (bundle) =>
                 {
                     lock (handler)
@@ -178,7 +184,7 @@ namespace Base.GEvent
         }
         public Quest POST(string url, params object[] args)
         {
-            return NewQuest(
+            return WebQuestHandler(
                 (bundle) =>
                 {
                     lock (handler)

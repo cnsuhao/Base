@@ -159,6 +159,7 @@ namespace Base
         protected override void DoTask()
         {
             GEvent.WebPeer web = new GEvent.WebPeer();
+            web.Timeout = 1;
             for (int i = 0; i < 5; i++)
             {
                 GEvent.Quest tryQuest = web.GET("http://www.baidu.com")

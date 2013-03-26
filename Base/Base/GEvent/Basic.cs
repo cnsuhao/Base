@@ -20,9 +20,17 @@ namespace Base.GEvent
     {
         NoError,
 
+        Timeout,
+
+        ConnectionFailed,
+
+        ConnectionClosed,
+
         WebError,
 
         Break,
+
+        ThrowOut,
 
         Undefined
     };
@@ -53,12 +61,31 @@ namespace Base.GEvent
             this.description = exception.Message;
             this.exception = exception;
         }
+
+        public override string ToString()
+        {
+            return "ErrorCode:" + erron.ToString() + " Exception: " + exception.ToString();
+        }
     };
     public class GEventException : BaseException
     {
+        ErrorBundle bundle = null;
+
+        public ErrorCode Code
+        {
+            get { return bundle.Erron; }
+        }
+
         public GEventException(ErrorBundle erron)
             : base(erron.Description, "GEvent")
         {
+            Assert.Null(erron);
+            this.bundle = erron;
+        }
+
+        public override string ToString()
+        {
+            return "ErrorCode:" + bundle.Erron.ToString() + " Exception: " + base.ToString();
         }
     }
     #endregion
