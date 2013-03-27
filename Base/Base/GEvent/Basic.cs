@@ -11,6 +11,8 @@ namespace Base.GEvent
     {
         WEB,
 
+        Common,
+
         Undefined
     }
     #endregion

@@ -86,7 +86,7 @@ namespace Base
 
         protected override void DoTask()
         {
-            Base.GEvent.WebHandler request = new Base.GEvent.WebHandler();
+            Base.GEvent.WebWrapper request = new Base.GEvent.WebWrapper();
             Console.WriteLine(request.Get("http://www.baidu.com"));
             isPass = true;
         }

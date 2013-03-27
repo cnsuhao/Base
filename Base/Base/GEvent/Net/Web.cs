@@ -16,7 +16,7 @@ using UnityEngine;
 
 namespace Base.GEvent
 {
-    class WebHandler
+    class WebWrapper
     {
         class DownloadBundle
         {
@@ -182,7 +182,7 @@ namespace Base.GEvent
 
     public class WebPeer : Peer
     {
-        WebHandler handler = new WebHandler();
+        WebWrapper handler = new WebWrapper();
 
         public WebPeer() { }
 
@@ -203,6 +203,12 @@ namespace Base.GEvent
                 }
             }
         }
+
+        public void AddCookie(string key, string value, string path = "", string domain = "")
+        {
+            handler.AddCookie(key, value, path, domain);
+        }
+
         public Quest WebQuestHandler(Quest.OnQuestDelegate func)
         {
             return new WebQuest(

@@ -51,6 +51,7 @@
     <Compile Include="Base\Basic\Platform.cs" />
     <Compile Include="Base\Basic\Utility.cs" />
     <Compile Include="Base\GEvent\Event.cs" />
+    <Compile Include="Base\GEvent\Common\Common.cs" />
     <Compile Include="Base\GEvent\Loop.cs" />
     <Compile Include="Base\GEvent\Peer.cs" />
     <Compile Include="Base\GML\Translator\Json\JsonTranslator.cs" />
