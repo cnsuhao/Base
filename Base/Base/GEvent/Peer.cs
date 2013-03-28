@@ -14,8 +14,6 @@ namespace Base.GEvent
         Loop loop = null;
 
         public Loop BaseLoop { set { loop = value; } get { return loop; } }
-        public bool IsEmpty { get{return waitings.Count == 0;} }
-        public bool IsBusy { get { return !IsEmpty; } }
 
         public Peer(Loop loop = null)
         {
@@ -24,43 +22,38 @@ namespace Base.GEvent
             loop.Attach(this);
         }
 
-        public Quest Take()
+        #region Quest Logic
+        // Run Quest Logic, the default implement is a blocking queue
+        protected void BlockingNext()
         {
-            if (IsEmpty)
-            {
-                Logger.Default.Warning("GEvent.Quest: You can not take a empty peer!");
-                return null;
-            }
-            return waitings.Dequeue();
-        }
-        public Quest Peek()
-        {
-            if (IsEmpty)
-            {
-                Logger.Default.Warning("GEvent.Quest: You can not take a empty peer!");
-                return null;
-            }
-            return waitings.Peek();
-        }
-        public void Next()
-        {
-            if (IsEmpty)
+            if (waitings.Count == 0)
             {
                 Logger.Default.Warning("GEvent.Quest: This quest should not be empty!");
                 return;
             }
-            Take();
-            if (IsEmpty)
+            waitings.Dequeue();
+            if (waitings.Count == 0)
                 return;
-            BaseLoop.Quest(Peek());
+            BaseLoop.Quest(waitings.Peek());
         }
-        public void _Run(Quest quest)
+        protected void BlockingRun(Quest quest)
         {
-            if (IsEmpty)
+            if (waitings.Count == 0)
                 BaseLoop.Quest(quest);
-        
+
             waitings.Enqueue(quest);
         }
+        public virtual void Next()
+        {
+            BlockingNext();
+        }
+        public virtual void _Run(Quest quest)
+        {
+            BlockingRun(quest);
+        }
+        #endregion
+
+        #region Util Funcs
         public void Invoke(PeerTaskDelegate task)
         {
             BaseLoop.Invoke(() => task(this));
@@ -69,6 +62,9 @@ namespace Base.GEvent
         {
             BaseLoop.Invoke(task);
         }
+        #endregion
+
+        #region Callback Funcs
         public virtual void OnStatusChange(Quest quest)
         {
         }
@@ -79,5 +75,6 @@ namespace Base.GEvent
         {
         }
         public virtual void OnStart(Quest quest) { }
+        #endregion
     }
 }
