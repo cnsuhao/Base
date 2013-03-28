@@ -151,7 +151,9 @@ namespace Base.GEvent
         public Quest Start()
         {
             Assert.Null(GetLoop);
-            GetLoop.Quest(this);
+
+            GetPeer._Run(this);
+
             return this;
         }
         public Quest Join()

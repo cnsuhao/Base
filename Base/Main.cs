@@ -175,7 +175,7 @@ namespace Base
             }
 
             GEvent.Loop.Global.Start();
-            GEvent.Loop.Global.Join();
+            GEvent.Loop.Global.Wait();
 
             isPass = true;
         }

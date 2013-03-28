@@ -18,9 +18,10 @@ namespace Base.GEvent
         StatusEnum status = StatusEnum.IDLE;
         TaskPool pool;
         Queue<Response> responses = new Queue<Response>();
-        List<Quest> quests = new List<Quest>();
+        List<Quest> quests = new List<Quest>(), waitings = new List<Quest>();
         List<Peer> peers = new List<Peer>();
 
+        public bool Complete { get { return quests.Count == 0; } }
         public Loop(int threadNum = MaxThread)
         {
             pool = new TaskPool(threadNum);
@@ -56,10 +57,15 @@ namespace Base.GEvent
         }
         public void Quest(Quest quest)
         {
-            quests.Add(quest);
-
             if (status == StatusEnum.RUNNING)
+            {
+                quests.Add(quest);
                 pool.Run(new Task(quest.DoTask));
+            }
+            else
+            {
+                waitings.Add(quest);
+            }
         }
         public void Response(Response response)
         {
@@ -73,21 +79,36 @@ namespace Base.GEvent
         {
             pool.Start();
             status = StatusEnum.RUNNING;
-            foreach (Quest quest in quests)
-                pool.Run(new GThread.Task(quest.DoTask));
+
+            foreach (Quest quest in waitings)
+                Quest(quest);
+            waitings.Clear();
         }
         public void Stop()
         {
+            status = StatusEnum.IDLE;
             pool.Stop();
         }
         public void Join()
         {
+            status = StatusEnum.IDLE;
             pool.Join();
-            while (quests.Count > 0)
+            while (!Complete)
             {
                 Logic();
                 NetUtil.Sleep(1);
             }
+            quests.Clear();
+        }
+        public void Wait()
+        {
+            while (!Complete)
+            {
+                Logic();
+                NetUtil.Sleep(1);
+            }
+            status = StatusEnum.IDLE;
+            pool.Join();
             quests.Clear();
         }
         public void Pause()
@@ -118,6 +139,11 @@ namespace Base.GEvent
                     {
                         response.GetQuest.Finally();
                         quests.Remove(response.GetQuest);
+                        response.GetPeer.Next();
+                    }
+                    else if (response.Type == GEvent.Response.TypeEnum.Error)
+                    {
+                        response.GetPeer.Next();
                     }
                 }
             }
