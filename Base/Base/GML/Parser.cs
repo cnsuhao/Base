@@ -32,7 +32,7 @@ namespace Base.GML
             this.linenum = linenum;
         }
 
-        public override string Message { get { return Message; } }
+        public override string Message { get { return message; } }
         public int Linenum { get { return linenum; } }
 
         public override string ToString()

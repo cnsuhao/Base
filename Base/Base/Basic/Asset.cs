@@ -12,5 +12,13 @@ namespace Base
             if (o == null)
                 Logger.Default.Error((name==""?"":o.GetType().ToString()) + " can not be Null");
         }
+        public static void Bool(bool check)
+        {
+            if (!check)
+            {
+                System.Exception exception = new System.Exception();
+                Logger.Default.Error("Assert Failed in "+exception.StackTrace);
+            }
+        }
     }
 }

@@ -483,6 +483,10 @@ namespace Base.GML
         {
             return Match(pattern, MakeFindBundle(pattern, ispattern));
         }
+        public Node[] FindChild(string pattern, bool ispattern = true)
+        {
+            return FindChild(pattern, MakeFindBundle(pattern, ispattern));
+        }
         private Node Find(string pattern, FindBundle bundle)
         {
             if (Match(pattern, bundle))
@@ -516,6 +520,14 @@ namespace Base.GML
                 attri.FindAll(pattern, ret_list, bundle);
             foreach (Node child in Children)
                 child.FindAll(pattern, ret_list, bundle);
+        }
+        private Node[] FindChild(string pattern, FindBundle bundle)
+        {
+            List<Node> ret_list = new List<Node>();
+            foreach (Node child in Children)
+                if (child.Match(pattern, bundle))
+                    ret_list.Add(child);
+            return ret_list.ToArray();
         }
         private FindBundle MakeFindBundle(string pattern, bool ispattern = true)
         {
